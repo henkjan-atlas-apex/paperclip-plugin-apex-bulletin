@@ -263,6 +263,11 @@ const plugin = definePlugin({
       },
     );
 
+    // Register data handler: "entries" — backs usePluginData("entries") in UI
+    ctx.data.register("entries", async (_params) => {
+      return loadEntries(ctx);
+    });
+
     // Register scheduled job: weekly-digest
     ctx.jobs.register("weekly-digest", async (job: PluginJobContext) => {
       await weeklyDigest(job, ctx);
