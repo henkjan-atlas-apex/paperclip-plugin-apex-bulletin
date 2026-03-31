@@ -19,7 +19,7 @@ export const manifest: PaperclipPluginManifestV1 = {
     "ui.dashboardWidget.register",
     "ui.action.register",
   ],
-  entrypoints: { worker: "./dist/worker.js", ui: "./dist/ui/index.js" },
+  entrypoints: { worker: "./dist/worker.js", ui: "./dist/ui" },
   ui: {
     slots: [
       {
