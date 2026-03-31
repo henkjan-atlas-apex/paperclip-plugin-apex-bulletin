@@ -37,6 +37,8 @@ const TYPE_COLORS: Record<EntryType, { bg: string; text: string }> = {
   DATA: { bg: "#f1f5f9", text: "#475569" },
 };
 
+const ENTRY_TYPES: EntryType[] = ["ANNOUNCEMENT", "DECISION", "FINDING", "RISK", "ACTION", "DATA"];
+
 // ---------------------------------------------------------------------------
 // Shared sub-components
 // ---------------------------------------------------------------------------
@@ -142,6 +144,172 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
 }
 
 // ---------------------------------------------------------------------------
+// PostForm — create a new bulletin entry
+// ---------------------------------------------------------------------------
+
+function PostForm({ onSuccess }: { onSuccess: () => void }) {
+  const boardPost = usePluginAction("board_post");
+  const [type, setType] = useState<EntryType>("DECISION");
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [context, setContext] = useState("");
+  const [impact, setImpact] = useState("");
+  const [nextAction, setNextAction] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    border: "1px solid #e2e8f0",
+    borderRadius: 5,
+    padding: "6px 8px",
+    fontSize: 12,
+    fontFamily: "inherit",
+    outline: "none",
+    boxSizing: "border-box",
+    color: "#1e293b",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#64748b",
+    display: "block",
+    marginBottom: 3,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+  };
+
+  const handleSubmit = (): void => {
+    if (!title.trim() || !summary.trim()) {
+      setError("Title and Summary are required.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+
+    const params: Record<string, string> = { type, title: title.trim(), summary: summary.trim() };
+    if (context.trim()) params.context = context.trim();
+    if (impact.trim()) params.impact = impact.trim();
+    if (nextAction.trim()) params.nextAction = nextAction.trim();
+
+    boardPost(params)
+      .then(() => {
+        setTitle("");
+        setSummary("");
+        setContext("");
+        setImpact("");
+        setNextAction("");
+        onSuccess();
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : "Failed to post entry.");
+      })
+      .finally(() => setSubmitting(false));
+  };
+
+  const c = TYPE_COLORS[type];
+
+  return (
+    <div
+      style={{
+        borderTop: "1px solid #e2e8f0",
+        padding: "14px 20px",
+        background: "#fafafa",
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        {/* Type selector */}
+        <div style={{ flex: "0 0 auto" }}>
+          <label style={labelStyle}>Type</label>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as EntryType)}
+            style={{
+              ...inputStyle,
+              width: "auto",
+              paddingRight: "24px",
+              background: c.bg,
+              color: c.text,
+              fontWeight: 700,
+              fontSize: 11,
+              border: `1px solid ${c.text}40`,
+            }}
+          >
+            {ENTRY_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Title */}
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>Title <span style={{ color: "#ef4444" }}>*</span></label>
+          <input
+            style={inputStyle}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Short title (max 120 chars)"
+            maxLength={120}
+          />
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div style={{ marginBottom: 6 }}>
+        <label style={labelStyle}>Summary <span style={{ color: "#ef4444" }}>*</span></label>
+        <textarea
+          style={{ ...inputStyle, resize: "vertical", minHeight: 48 }}
+          value={summary}
+          onChange={(e) => setSummary(e.target.value)}
+          placeholder="1-3 sentences"
+          rows={2}
+        />
+      </div>
+
+      {/* Optional fields — collapsible row */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>Context (optional)</label>
+          <input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. ATL-12" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>Impact (optional)</label>
+          <input style={inputStyle} value={impact} onChange={(e) => setImpact(e.target.value)} placeholder="Who or what is affected" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label style={labelStyle}>Next action (optional)</label>
+          <input style={inputStyle} value={nextAction} onChange={(e) => setNextAction(e.target.value)} placeholder="What happens next" />
+        </div>
+      </div>
+
+      {error && (
+        <div style={{ fontSize: 11, color: "#ef4444", marginBottom: 6 }}>⚠ {error}</div>
+      )}
+
+      <button
+        onClick={handleSubmit}
+        disabled={submitting}
+        style={{
+          padding: "7px 18px",
+          background: "#6366f1",
+          color: "#fff",
+          border: "none",
+          borderRadius: 5,
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: submitting ? "not-allowed" : "pointer",
+          opacity: submitting ? 0.6 : 1,
+        }}
+      >
+        {submitting ? "Posting…" : "Post Entry"}
+      </button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // DashboardWidget — compact 5-entry feed
 // ---------------------------------------------------------------------------
 
@@ -210,8 +378,9 @@ const FILTER_TYPES: Array<EntryType | "ALL"> = [
 ];
 
 export function BulletinBoardModal(_props: PluginWidgetProps) {
-  const { data, loading, error } = usePluginData<BoardEntry[]>("entries");
+  const { data, loading, error, refresh } = usePluginData<BoardEntry[]>("entries");
   const [filter, setFilter] = useState<EntryType | "ALL">("ALL");
+  const [showForm, setShowForm] = useState(false);
 
   const all: BoardEntry[] = Array.isArray(data) ? data : [];
   const visible = filter === "ALL" ? all : all.filter((e) => e.type === filter);
@@ -230,14 +399,35 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
         style={{
           padding: "16px 20px",
           borderBottom: "1px solid #e2e8f0",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>
-          Bulletin Board
-        </h2>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
-          Decisions, findings, risks, actions, and data outputs from the APEX team.
-        </p>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>
+            Bulletin Board
+          </h2>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+            Decisions, findings, risks, actions, and data outputs from the APEX team.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          style={{
+            padding: "6px 14px",
+            background: showForm ? "#e0e7ff" : "#6366f1",
+            color: showForm ? "#4338ca" : "#fff",
+            border: "none",
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          {showForm ? "✕ Cancel" : "+ New Entry"}
+        </button>
       </div>
 
       {/* Filter tabs */}
@@ -309,6 +499,16 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
           <EntryCard key={e.id} entry={e} />
         ))}
       </div>
+
+      {/* Post form — shown when "+ New Entry" is clicked */}
+      {showForm && (
+        <PostForm
+          onSuccess={() => {
+            setShowForm(false);
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
