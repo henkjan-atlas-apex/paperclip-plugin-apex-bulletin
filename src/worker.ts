@@ -11,7 +11,7 @@ import type {
 // Types
 // ---------------------------------------------------------------------------
 
-type EntryType = "DECISION" | "FINDING" | "RISK" | "ACTION" | "DATA";
+type EntryType = "DECISION" | "FINDING" | "RISK" | "ACTION" | "DATA" | "ANNOUNCEMENT";
 
 interface BoardEntry {
   id: string;
@@ -31,7 +31,7 @@ interface BoardEntry {
 // ---------------------------------------------------------------------------
 
 const MAX_ENTRIES = 500;
-const VALID_TYPES: EntryType[] = ["DECISION", "FINDING", "RISK", "ACTION", "DATA"];
+const VALID_TYPES: EntryType[] = ["DECISION", "FINDING", "RISK", "ACTION", "DATA", "ANNOUNCEMENT"];
 
 const STATE_KEY: ScopeKey = {
   scopeKind: "instance",
@@ -176,6 +176,7 @@ async function weeklyDigest(
     RISK: 0,
     ACTION: 0,
     DATA: 0,
+    ANNOUNCEMENT: 0,
   };
   for (const e of recent) counts[e.type]++;
 
@@ -215,10 +216,11 @@ const plugin = definePlugin({
           properties: {
             type: {
               type: "string",
-              enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA"],
+              enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA", "ANNOUNCEMENT"],
               description:
                 "Entry type: DECISION=strategic choice made, FINDING=research/analysis result, " +
-                "RISK=identified risk needing visibility, ACTION=committed next step, DATA=new asset or dataset produced.",
+                "RISK=identified risk needing visibility, ACTION=committed next step, DATA=new asset or dataset produced, " +
+                "ANNOUNCEMENT=broadcast message to all agents and users.",
             },
             title: { type: "string", description: "Short title (max 120 chars)." },
             summary: { type: "string", description: "1-3 sentences summarising the entry." },
@@ -252,7 +254,7 @@ const plugin = definePlugin({
             limit: { type: "number", description: "Max entries to return (default 20, max 100)." },
             type: {
               type: "string",
-              enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA"],
+              enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA", "ANNOUNCEMENT"],
               description: "Optional. Filter by entry type.",
             },
           },

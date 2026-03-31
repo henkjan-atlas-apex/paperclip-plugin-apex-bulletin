@@ -9,7 +9,7 @@ import { useState } from "react";
 // Types
 // ---------------------------------------------------------------------------
 
-type EntryType = "DECISION" | "FINDING" | "RISK" | "ACTION" | "DATA";
+type EntryType = "DECISION" | "FINDING" | "RISK" | "ACTION" | "DATA" | "ANNOUNCEMENT";
 
 interface BoardEntry {
   id: string;
@@ -29,6 +29,7 @@ interface BoardEntry {
 // ---------------------------------------------------------------------------
 
 const TYPE_COLORS: Record<EntryType, { bg: string; text: string }> = {
+  ANNOUNCEMENT: { bg: "#fef3c7", text: "#92400e" }, // amber — visually prominent
   DECISION: { bg: "#dbeafe", text: "#1d4ed8" },
   FINDING: { bg: "#dcfce7", text: "#15803d" },
   RISK: { bg: "#fee2e2", text: "#b91c1c" },
@@ -160,7 +161,13 @@ export function DashboardWidget(_props: PluginWidgetProps) {
     );
   }
 
-  const entries: BoardEntry[] = Array.isArray(data) ? data.slice(0, 5) : [];
+  // Announcements pinned first, then remaining entries up to 5 total
+  const entries: BoardEntry[] = Array.isArray(data)
+    ? [
+        ...data.filter((e) => e.type === "ANNOUNCEMENT").slice(0, 2),
+        ...data.filter((e) => e.type !== "ANNOUNCEMENT"),
+      ].slice(0, 5)
+    : [];
 
   return (
     <div style={{ padding: 12 }}>
@@ -194,6 +201,7 @@ export function DashboardWidget(_props: PluginWidgetProps) {
 
 const FILTER_TYPES: Array<EntryType | "ALL"> = [
   "ALL",
+  "ANNOUNCEMENT",
   "DECISION",
   "FINDING",
   "RISK",
@@ -306,44 +314,90 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
 }
 
 // ---------------------------------------------------------------------------
-// SidebarItem — left nav entry
+// SidebarItem — left nav entry with self-managed modal
 // ---------------------------------------------------------------------------
 
 export function SidebarItem(_props: PluginWidgetProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "6px 8px",
-        borderRadius: 5,
-        cursor: "pointer",
-        fontSize: 13,
-        fontWeight: 500,
-        color: "inherit",
-      }}
-    >
-      <svg
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ flexShrink: 0 }}
+    <>
+      <div
+        onClick={() => setOpen(true)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "6px 8px",
+          borderRadius: 5,
+          cursor: "pointer",
+          fontSize: 13,
+          fontWeight: 500,
+          color: "inherit",
+          userSelect: "none",
+        }}
       >
-        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <path d="M12 11h4" />
-        <path d="M12 16h4" />
-        <path d="M8 11h.01" />
-        <path d="M8 16h.01" />
-      </svg>
-      Bulletin Board
-    </div>
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ flexShrink: 0 }}
+        >
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <path d="M12 11h4" />
+          <path d="M12 16h4" />
+          <path d="M8 11h.01" />
+          <path d="M8 16h.01" />
+        </svg>
+        Bulletin Board
+      </div>
+
+      {open && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 10,
+              width: "min(860px, 94vw)",
+              height: "min(600px, 90vh)",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#94a3b8", lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ flex: 1, overflow: "hidden" }}>
+              <BulletinBoardModal {..._props} />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

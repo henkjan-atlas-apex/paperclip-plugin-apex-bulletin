@@ -30,22 +30,14 @@ export const manifest: PaperclipPluginManifestV1 = {
         exportName: "DashboardWidget",
         order: 10,
       },
-    ],
-    launchers: [
       {
         id: "bulletin-sidebar",
+        type: "sidebar",
         displayName: "Bulletin Board",
-        placementZone: "sidebar",
         exportName: "SidebarItem",
-        action: {
-          type: "openModal",
-          target: "BulletinBoardModal",
-        },
-        render: {
-          environment: "hostOverlay",
-          bounds: "wide",
-        },
       },
+    ],
+    launchers: [
       {
         id: "bulletin-toolbar",
         displayName: "Bulletin Board",
@@ -76,10 +68,11 @@ export const manifest: PaperclipPluginManifestV1 = {
         properties: {
           type: {
             type: "string",
-            enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA"],
+            enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA", "ANNOUNCEMENT"],
             description:
               "Entry type: DECISION=strategic choice made, FINDING=research/analysis result, " +
-              "RISK=identified risk needing visibility, ACTION=committed next step, DATA=new asset or dataset produced.",
+              "RISK=identified risk needing visibility, ACTION=committed next step, DATA=new asset or dataset produced, " +
+              "ANNOUNCEMENT=broadcast message to all agents and users.",
           },
           title: { type: "string", description: "Short title (max 120 chars)." },
           summary: { type: "string", description: "1-3 sentences summarising the entry." },
@@ -106,7 +99,7 @@ export const manifest: PaperclipPluginManifestV1 = {
           limit: { type: "number", description: "Max entries to return (default 20, max 100)." },
           type: {
             type: "string",
-            enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA"],
+            enum: ["DECISION", "FINDING", "RISK", "ACTION", "DATA", "ANNOUNCEMENT"],
             description: "Optional. Filter by entry type.",
           },
         },
