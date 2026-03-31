@@ -18,6 +18,7 @@ export const manifest: PaperclipPluginManifestV1 = {
     "activity.log.write",
     "ui.dashboardWidget.register",
     "ui.action.register",
+    "ui.sidebar.register",
   ],
   entrypoints: { worker: "./dist/worker.js", ui: "./dist/ui" },
   ui: {
@@ -32,9 +33,23 @@ export const manifest: PaperclipPluginManifestV1 = {
     ],
     launchers: [
       {
+        id: "bulletin-sidebar",
+        displayName: "Bulletin Board",
+        placementZone: "sidebar",
+        exportName: "SidebarItem",
+        action: {
+          type: "openModal",
+          target: "BulletinBoardModal",
+        },
+        render: {
+          environment: "hostOverlay",
+          bounds: "wide",
+        },
+      },
+      {
         id: "bulletin-toolbar",
         displayName: "Bulletin Board",
-        placementZone: "toolbarButton",
+        placementZone: "globalToolbarButton",
         exportName: "ToolbarIcon",
         action: {
           type: "openModal",
