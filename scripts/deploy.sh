@@ -113,10 +113,11 @@ git push "${FORGEJO_PUSH_URL}" "${TAG}" --quiet 2>/dev/null || echo "   (tag pus
 # ── Deploy to Docker volume ───────────────────────────────────────────────────
 echo "→ Deploying to Docker volume..."
 docker cp "${TGZ}" "${CONTAINER}:/tmp/${TGZ}"
-docker exec "${CONTAINER}" sh -c "
+docker exec -u root "${CONTAINER}" sh -c "
   mkdir -p '${INSTALL_PATH}' &&
   cd '${INSTALL_PATH}' &&
-  tar -xzf '/tmp/${TGZ}' --strip-components=1 &&
+  tar -xzf '/tmp/${TGZ}' --strip-components=1 --overwrite &&
+  chmod -R a+rX '${INSTALL_PATH}' &&
   rm '/tmp/${TGZ}'
 "
 echo "   extracted to ${INSTALL_PATH}"
