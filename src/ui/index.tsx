@@ -567,9 +567,12 @@ export function BulletinBoardModal(_props: PluginWidgetProps & { onClose?: () =>
 
 function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); }
+    };
+    // Use capture phase so we handle ESC before Radix Dialog or other host overlays
+    document.addEventListener("keydown", handler, true);
+    return () => document.removeEventListener("keydown", handler, true);
   }, [onClose]);
 
   return createPortal(
@@ -648,38 +651,47 @@ export function SidebarItem(_props: PluginWidgetProps) {
 }
 
 // ---------------------------------------------------------------------------
-// ToolbarIcon — clipboard SVG button
+// ToolbarIcon — clipboard SVG button that opens the bulletin modal
 // ---------------------------------------------------------------------------
 
 export function ToolbarIcon(_props: PluginWidgetProps) {
+  const [open, setOpen] = useState(false);
   const configData = usePluginData<{ showToolbarButton: boolean }>("config");
   if (configData.data?.showToolbarButton === false) return null;
   return (
-    <button
-      type="button"
-      title="Bulletin Board"
-      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
+    <>
+      <button
+        type="button"
+        title="Bulletin Board"
+        onClick={() => setOpen(true)}
+        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >
-        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <path d="M12 11h4" />
-        <path d="M12 16h4" />
-        <path d="M8 11h.01" />
-        <path d="M8 16h.01" />
-      </svg>
-      Bulletin Board
-    </button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+          <path d="M12 11h4" />
+          <path d="M12 16h4" />
+          <path d="M8 11h.01" />
+          <path d="M8 16h.01" />
+        </svg>
+        Bulletin Board
+      </button>
+      {open && (
+        <ModalOverlay onClose={() => setOpen(false)}>
+          <BulletinBoardModal {..._props} onClose={() => setOpen(false)} />
+        </ModalOverlay>
+      )}
+    </>
   );
 }
