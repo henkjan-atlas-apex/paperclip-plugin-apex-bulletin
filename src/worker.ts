@@ -275,6 +275,13 @@ const plugin = definePlugin({
       await weeklyDigest(job, ctx);
     });
 
+    ctx.data.register("config", async () => {
+      const config = await ctx.config.get();
+      const showToolbarButton = typeof config["showToolbarButton"] === "boolean"
+        ? config["showToolbarButton"] : true;
+      return { showToolbarButton };
+    });
+
     ctx.logger.info("APEX Bulletin Board plugin ready");
   },
 });

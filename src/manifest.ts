@@ -10,6 +10,18 @@ export const manifest: PaperclipPluginManifestV1 = {
   apiVersion: 1,
   author: "APEX / Glacid.one",
   categories: ["automation"],
+  instanceConfigSchema: {
+    type: "object",
+    required: [],
+    properties: {
+      showToolbarButton: {
+        type: "boolean",
+        title: "Show toolbar shortcut",
+        description: "Adds a Bulletin Board button to the global toolbar.",
+        default: true,
+      },
+    },
+  },
   capabilities: [
     "plugin.state.read",
     "jobs.schedule",

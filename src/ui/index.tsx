@@ -3,7 +3,21 @@ import {
   usePluginAction,
   type PluginWidgetProps,
 } from "@paperclipai/plugin-sdk/ui";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Design tokens — CSS variables so the plugin follows Paperclip's light/dark theme
+const C = {
+  bg: "hsl(var(--card))",
+  surface: "hsl(var(--muted))",
+  border: "hsl(var(--border))",
+  textPrimary: "hsl(var(--card-foreground))",
+  textMuted: "hsl(var(--muted-foreground))",
+  textDim: "hsl(var(--muted-foreground))",
+  green: "#22c55e",
+  red: "hsl(var(--destructive))",
+  accent: "hsl(var(--accent))",
+  accentFg: "hsl(var(--accent-foreground))",
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,8 +90,8 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
       style={{
         padding: "10px 12px",
         borderRadius: 6,
-        border: "1px solid #e2e8f0",
-        background: "#fff",
+        border: `1px solid ${C.border}`,
+        background: C.bg,
         cursor: "pointer",
         marginBottom: 6,
       }}
@@ -96,7 +110,7 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
             fontSize: 13,
             fontWeight: 600,
             flex: 1,
-            color: "#1e293b",
+            color: C.textPrimary,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: expanded ? "normal" : ("nowrap" as const),
@@ -104,7 +118,7 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
         >
           {entry.title}
         </span>
-        <span style={{ fontSize: 11, color: "#94a3b8", flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: C.textMuted, flexShrink: 0 }}>
           {formatDate(entry.postedAt)}
         </span>
       </div>
@@ -112,7 +126,7 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
         <div
           style={{
             fontSize: 12,
-            color: "#475569",
+            color: C.textDim,
             marginTop: 6,
             display: "grid",
             gap: 4,
@@ -135,7 +149,7 @@ function EntryCard({ entry }: { entry: BoardEntry }) {
             </div>
           )}
           {entry.agentRole && (
-            <div style={{ color: "#94a3b8" }}>Posted by: {entry.agentRole}</div>
+            <div style={{ color: C.textMuted }}>Posted by: {entry.agentRole}</div>
           )}
         </div>
       )}
@@ -160,20 +174,20 @@ function PostForm({ onSuccess }: { onSuccess: () => void }) {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    border: "1px solid #e2e8f0",
+    border: `1px solid ${C.border}`,
     borderRadius: 5,
     padding: "6px 8px",
     fontSize: 12,
     fontFamily: "inherit",
     outline: "none",
     boxSizing: "border-box",
-    color: "#1e293b",
+    color: C.textPrimary,
   };
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11,
     fontWeight: 600,
-    color: "#64748b",
+    color: C.textMuted,
     display: "block",
     marginBottom: 3,
     textTransform: "uppercase",
@@ -213,9 +227,9 @@ function PostForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div
       style={{
-        borderTop: "1px solid #e2e8f0",
+        borderTop: `1px solid ${C.border}`,
         padding: "14px 20px",
-        background: "#fafafa",
+        background: C.surface,
         flexShrink: 0,
       }}
     >
@@ -318,12 +332,12 @@ export function DashboardWidget(_props: PluginWidgetProps) {
 
   if (loading) {
     return (
-      <div style={{ padding: 12, fontSize: 13, color: "#94a3b8" }}>Loading...</div>
+      <div style={{ padding: 12, fontSize: 13, color: C.textMuted }}>Loading...</div>
     );
   }
   if (error) {
     return (
-      <div style={{ padding: 12, fontSize: 13, color: "#ef4444" }}>
+      <div style={{ padding: 12, fontSize: 13, color: C.red }}>
         Error: {error.message}
       </div>
     );
@@ -347,13 +361,13 @@ export function DashboardWidget(_props: PluginWidgetProps) {
           marginBottom: 10,
         }}
       >
-        <strong style={{ fontSize: 13, color: "#1e293b" }}>Bulletin Board</strong>
+        <strong style={{ fontSize: 13, color: C.textPrimary }}>Bulletin Board</strong>
         {Array.isArray(data) && data.length > 0 && (
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>{data.length} entries</span>
+          <span style={{ fontSize: 11, color: C.textMuted }}>{data.length} entries</span>
         )}
       </div>
       {entries.length === 0 ? (
-        <div style={{ fontSize: 12, color: "#94a3b8" }}>
+        <div style={{ fontSize: 12, color: C.textMuted }}>
           No entries yet. Agents will post here after completing significant work.
         </div>
       ) : (
@@ -377,10 +391,11 @@ const FILTER_TYPES: Array<EntryType | "ALL"> = [
   "DATA",
 ];
 
-export function BulletinBoardModal(_props: PluginWidgetProps) {
+export function BulletinBoardModal(_props: PluginWidgetProps & { onClose?: () => void }) {
   const { data, loading, error, refresh } = usePluginData<BoardEntry[]>("entries");
   const [filter, setFilter] = useState<EntryType | "ALL">("ALL");
   const [showForm, setShowForm] = useState(false);
+  const { onClose } = _props;
 
   const all: BoardEntry[] = Array.isArray(data) ? data : [];
   const visible = filter === "ALL" ? all : all.filter((e) => e.type === filter);
@@ -394,21 +409,53 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
         fontFamily: "system-ui, sans-serif",
       }}
     >
-      {/* Header */}
+      {/* Close header — only when rendered inside SidebarItem's ModalOverlay */}
+      {onClose && (
+        <div
+          style={{
+            padding: "12px 20px 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: `1px solid ${C.border}`,
+            paddingBottom: 12,
+          }}
+        >
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary }}>
+            Bulletin Board
+          </span>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 18,
+              color: C.textMuted,
+              lineHeight: 1,
+              padding: "2px 4px",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Action row */}
       <div
         style={{
           padding: "16px 20px",
-          borderBottom: "1px solid #e2e8f0",
+          borderBottom: `1px solid ${C.border}`,
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
         }}
       >
         <div>
-          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1e293b" }}>
-            Bulletin Board
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.textPrimary }}>
+            {onClose ? "" : "Bulletin Board"}
           </h2>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+          <p style={{ margin: onClose ? 0 : "4px 0 0", fontSize: 12, color: C.textMuted }}>
             Decisions, findings, risks, actions, and data outputs from the APEX team.
           </p>
         </div>
@@ -416,8 +463,8 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
           onClick={() => setShowForm((v) => !v)}
           style={{
             padding: "6px 14px",
-            background: showForm ? "#e0e7ff" : "#6366f1",
-            color: showForm ? "#4338ca" : "#fff",
+            background: showForm ? C.accent : "#6366f1",
+            color: showForm ? C.accentFg : "#fff",
             border: "none",
             borderRadius: 6,
             fontSize: 12,
@@ -434,7 +481,7 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
       <div
         style={{
           padding: "10px 20px",
-          borderBottom: "1px solid #e2e8f0",
+          borderBottom: `1px solid ${C.border}`,
           display: "flex",
           gap: 6,
           flexWrap: "wrap",
@@ -447,7 +494,7 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
           const c =
             t !== "ALL"
               ? TYPE_COLORS[t]
-              : { bg: "#f1f5f9", text: "#475569" };
+              : { bg: C.surface, text: C.textDim };
           return (
             <button
               key={t}
@@ -456,9 +503,9 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
                 padding: "4px 10px",
                 borderRadius: 6,
                 border: "1px solid",
-                borderColor: active ? c.text : "#e2e8f0",
-                background: active ? c.bg : "#fff",
-                color: active ? c.text : "#64748b",
+                borderColor: active ? c.text : C.border,
+                background: active ? c.bg : C.bg,
+                color: active ? c.text : C.textMuted,
                 fontSize: 12,
                 fontWeight: active ? 700 : 400,
                 cursor: "pointer",
@@ -476,10 +523,10 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
       {/* Entry list */}
       <div style={{ flex: 1, overflow: "auto", padding: "12px 20px" }}>
         {loading && (
-          <div style={{ fontSize: 13, color: "#94a3b8" }}>Loading...</div>
+          <div style={{ fontSize: 13, color: C.textMuted }}>Loading...</div>
         )}
         {error && (
-          <div style={{ fontSize: 13, color: "#ef4444" }}>
+          <div style={{ fontSize: 13, color: C.red }}>
             Error: {error.message}
           </div>
         )}
@@ -487,7 +534,7 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
           <div
             style={{
               fontSize: 13,
-              color: "#94a3b8",
+              color: C.textMuted,
               textAlign: "center",
               paddingTop: 40,
             }}
@@ -514,6 +561,43 @@ export function BulletinBoardModal(_props: PluginWidgetProps) {
 }
 
 // ---------------------------------------------------------------------------
+// ModalOverlay — reusable overlay with ESC support
+// ---------------------------------------------------------------------------
+
+function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+    >
+      <div style={{
+        width: "min(960px, 96vw)",
+        height: "min(84vh, 820px)",
+        borderRadius: 10,
+        background: C.bg,
+        border: `1px solid ${C.border}`,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.4)",
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // SidebarItem — left nav entry with self-managed modal
 // ---------------------------------------------------------------------------
 
@@ -525,16 +609,10 @@ export function SidebarItem(_props: PluginWidgetProps) {
       <div
         onClick={() => setOpen(true)}
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "6px 8px",
-          borderRadius: 5,
-          cursor: "pointer",
-          fontSize: 13,
-          fontWeight: 500,
-          color: "inherit",
-          userSelect: "none",
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "6px 8px", borderRadius: 5, cursor: "pointer",
+          fontSize: 13, fontWeight: 500, color: "inherit",
+          userSelect: "none" as const, width: "100%",
         }}
       >
         <svg
@@ -559,43 +637,9 @@ export function SidebarItem(_props: PluginWidgetProps) {
       </div>
 
       {open && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            background: "rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 10,
-              width: "min(960px, 96vw)",
-              height: "min(88vh, 840px)",
-              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
-              <button
-                onClick={() => setOpen(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: "#94a3b8", lineHeight: 1 }}
-              >
-                ✕
-              </button>
-            </div>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-              <BulletinBoardModal {..._props} />
-            </div>
-          </div>
-        </div>
+        <ModalOverlay onClose={() => setOpen(false)}>
+          <BulletinBoardModal {..._props} onClose={() => setOpen(false)} />
+        </ModalOverlay>
       )}
     </>
   );
@@ -606,6 +650,8 @@ export function SidebarItem(_props: PluginWidgetProps) {
 // ---------------------------------------------------------------------------
 
 export function ToolbarIcon(_props: PluginWidgetProps) {
+  const configData = usePluginData<{ showToolbarButton: boolean }>("config");
+  if (configData.data?.showToolbarButton === false) return null;
   return (
     <button
       type="button"
