@@ -575,9 +575,9 @@ export function SidebarItem(_props: PluginWidgetProps) {
             style={{
               background: "#fff",
               borderRadius: 10,
-              width: "min(860px, 94vw)",
-              height: "min(600px, 90vh)",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              width: "min(960px, 96vw)",
+              height: "min(88vh, 840px)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -606,31 +606,23 @@ export function SidebarItem(_props: PluginWidgetProps) {
 // ---------------------------------------------------------------------------
 
 export function ToolbarIcon(_props: PluginWidgetProps) {
-  // usePluginAction kept available for future wiring (e.g. open modal programmatically)
-  void usePluginAction;
-
   return (
-    <div
+    <button
+      type="button"
       title="Bulletin Board"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 32,
-        height: 32,
-        borderRadius: 6,
-        cursor: "pointer",
-      }}
+      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     >
       <svg
-        width="18"
-        height="18"
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
       >
         <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -639,6 +631,7 @@ export function ToolbarIcon(_props: PluginWidgetProps) {
         <path d="M8 11h.01" />
         <path d="M8 16h.01" />
       </svg>
-    </div>
+      Bulletin Board
+    </button>
   );
 }
