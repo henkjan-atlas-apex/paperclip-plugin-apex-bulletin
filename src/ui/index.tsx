@@ -7,16 +7,16 @@ import { useState, useEffect } from "react";
 
 // Design tokens — CSS variables so the plugin follows Paperclip's light/dark theme
 const C = {
-  bg: "hsl(var(--card))",
-  surface: "hsl(var(--muted))",
-  border: "hsl(var(--border))",
-  textPrimary: "hsl(var(--card-foreground))",
-  textMuted: "hsl(var(--muted-foreground))",
-  textDim: "hsl(var(--muted-foreground))",
+  bg: "var(--card)",
+  surface: "var(--muted)",
+  border: "var(--border)",
+  textPrimary: "var(--card-foreground)",
+  textMuted: "var(--muted-foreground)",
+  textDim: "var(--muted-foreground)",
   green: "#22c55e",
-  red: "hsl(var(--destructive))",
-  accent: "hsl(var(--accent))",
-  accentFg: "hsl(var(--accent-foreground))",
+  red: "var(--destructive)",
+  accent: "var(--accent)",
+  accentFg: "var(--accent-foreground)",
 };
 
 // ---------------------------------------------------------------------------
