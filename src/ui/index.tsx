@@ -4,7 +4,6 @@ import {
   type PluginWidgetProps,
 } from "@paperclipai/plugin-sdk/ui";
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 
 // Design tokens — CSS variables so the plugin follows Paperclip's light/dark theme
 const C = {
@@ -575,11 +574,11 @@ function ModalOverlay({ onClose, children }: { onClose: () => void; children: Re
     return () => document.removeEventListener("keydown", handler, true);
   }, [onClose]);
 
-  return createPortal(
+  return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
-        position: "fixed", inset: 0, zIndex: 99999,
+        position: "fixed", inset: 0, zIndex: 9999,
         background: "rgba(0,0,0,0.5)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}
@@ -597,8 +596,7 @@ function ModalOverlay({ onClose, children }: { onClose: () => void; children: Re
       }}>
         {children}
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
 
